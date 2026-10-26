@@ -26,4 +26,8 @@ class Producto(db.Model):
     def __repr__(self):
         return f"Producto id={self.id}: {self.nombre} ({self.precio})"
 
+
+    #añadir modificar y eliminar productos y tal Y CICLO CRUD
+
+
     
