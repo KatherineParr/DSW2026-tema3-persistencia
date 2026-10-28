@@ -1,3 +1,5 @@
+import os
+from werkzeug.utils import secure_filename
 from flask import Flask, redirect, render_template, url_for
 from app.models import db, Producto
 from app.forms import ProductoForm
@@ -13,6 +15,41 @@ app.config["SECRET_KEY"] = "contraseña"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tienda.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False #si se modifican los datos
 ##que salga una noti si algo ta bien o no y otras advertencias
+
+
+
+# Configurar la carpeta destino para las imágenes
+app.config["UPLOAD_FOLDER"] = os.path.join("app", "static", "img", "uploads")
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024 # Límite de 2MB por seguridad
+
+@app.route("/producto/nuevo", methods=["GET", "POST"])
+def crear_producto():
+    form = ProductoForm()
+    if form.validate_on_submit():
+        nombre_imagen = None
+        
+        # Procesar la imagen si el usuario ha subido una
+        if form.imagen.data:
+            archivo = form.imagen.data
+            nombre_imagen = secure_filename(archivo.filename)
+            
+            # Asegurar que la ruta existe y guardar el archivo
+            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+            archivo.save(os.path.join(app.config["UPLOAD_FOLDER"], nombre_imagen))
+
+        nuevo_prod = Producto(
+            nombre=form.nombre.data,
+            precio=form.precio.data,
+            disponible=form.disponible.data,
+            imagen=nombre_imagen if form.imagen.data else None,# Guardamos solo el nombre del fichero en la BD
+        )
+        db.session.add(nuevo_prod)
+        db.session.commit()
+        return redirect(url_for("mostrar_catalogo"))
+
+    return render_template("producto_form.html", form=form, titulo="Nuevo Producto")
+    
+
 
 #vinculamos alchemy con nuestr aappp de flask
 db.init_app(app)
@@ -47,7 +84,7 @@ def mostrar_catalogo():
 
 #para hacer el CRUD
 
-@app.route("/producto/nuevo", methods=["GET", "POST"])
+""" @app.route("/producto/nuevo", methods=["GET", "POST"])
 def crear_producto():
     form = ProductoForm()
     if form.validate_on_submit():
@@ -59,7 +96,7 @@ def crear_producto():
         db.session.add(nuevo_producto)
         db.session.commit()
         #patron prg: redirigir despues de procesar
-        return redirect(url_for("mostrar_catalogo"))
+        return redirect(url_for("mostrar_catalogo")) """
 
 # 3. UPDATE: Recuperar un producto existente, rellenar el formulario y guardar cambios
 @app.route("/producto/<int:prod_id>/editar", methods=["GET", "POST"])
@@ -75,6 +112,7 @@ def editar_producto(prod_id):
         producto.nombre = form.nombre.data
         producto.precio = form.precio.data
         producto.disponible = form.disponible.data
+        producto.imagen = nombre_imagen if form.imagen.data else form.imagen.data,
 
         # Confirmamos los cambios en la BD
         db.session.commit()
