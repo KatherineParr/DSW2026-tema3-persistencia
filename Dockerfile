@@ -26,7 +26,7 @@ COPY pyproject.toml .
 # uv creará automáticamente un entorno virtual y descargará Flask
 RUN uv sync
 
-EXPOSE 5000
+EXPOSE 5001
 
 # 3. Ejecutamos nuestra app usando 'uv run' para que use el entorno virtual
 CMD ["uv", "run", "python", "app/main.py"]
