@@ -15,7 +15,7 @@ from flask import (
 from app.forms import ProductoForm, RegistroForm, LoginForm
 from app.models import db, Producto, Usuario
 from datetime import timedelta
-from flask_debugtoolbar import DebugToolbarExtension
+
 from flask_login import (
     LoginManager,
     login_user,
@@ -32,7 +32,7 @@ app.debug = True
 
 app.config["SECRET_KEY"] = "una_contraseña_segura_al_azar"
 
-toolbar = DebugToolbarExtension(app)
+
 
 # Configuración de la base de datos (En local = SQLite)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tienda.db"
@@ -48,19 +48,6 @@ app.config["PERMANTENT_SESSION_LIFETIME"] = timedelta(days=2)
 # Vinculamos SQLAlchemy con nuestra aplicación de Flask
 db.init_app(app)
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-
-# Indicamos el nombre de la función de vista a la que redirigir si un anónimo intenta entrar a una ruta protegida
-login_manager.login_view = "login"
-login_manager.login_message = "Por favor, inicia sesión para acceder a esta sección."
-login_manager.login_message_category = "info"
-
-
-@login_manager.user_loader
-def cargar_usuario(user_id):
-    """Recupera el objeto Usuario desde tienda.db a partir del ID guardado en la cookie session."""
-    return db.session.get(Usuario, int(user_id))
 
 
 def admin_required(f):
